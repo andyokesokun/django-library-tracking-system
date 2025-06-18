@@ -47,6 +47,7 @@ class LoanSerializer(serializers.ModelSerializer):
         loan = Loan(**validated_data)
         loan.due_date = loan.loan_date+timedelta(days=14)
         loan.save()
+        return loan
         
     class Meta:
         model = Loan

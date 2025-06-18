@@ -41,8 +41,6 @@ class Loan(models.Model):
     loan_date = models.DateField(auto_now_add=True)
     due_date = models.DateField(null=True, blank=True)
     return_date = models.DateField(null=True, blank=True)
-
-
     is_returned = models.BooleanField(default=False)
 
     def __str__(self):

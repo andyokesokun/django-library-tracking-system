@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .models import Author, Book, Member, Loan
-from .serializers import AuthorSerializer, BookSerializer, MemberSerializer, LoanSerializer
+from .serializers import AuthorSerializer, BookSerializer, MemberSerializer, LoanSerializer,serializers
 from rest_framework.decorators import action
 from django.utils import timezone
 from .tasks import send_loan_notification
@@ -50,14 +50,19 @@ class MemberViewSet(viewsets.ModelViewSet):
     queryset = Member.objects.all()
     serializer_class = MemberSerializer
 
+class ExtendDueDateSerializer(serializers.Serializer):
+    days = serializers.IntegerField(min_value=1)
+
 class LoanViewSet(viewsets.ModelViewSet):
     queryset = Loan.objects.all()
     serializer_class = LoanSerializer
 
-    @action(detail=True, url='<#pk>/extend_due_date', methods=['patch'])
+    @action(detail=True, methods=['patch'])
     def extend_due_date(self, request, pk=None):
         loan = self.get_object()
-        loan.is_returned = True
-        loan.return_date = timezone.now().date()
+        serializer = ExtendDueDateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        days = serializer.validated_data["days"]
+        loan.return_date +=timedelta(days)
         loan.save()
-        return Response({'status': 'Book  due date extended successfully.'}, status=status.HTTP_200_OK)
+        return Response({'status': 'Book due date extended successfully.'}, status=status.HTTP_200_OK)
