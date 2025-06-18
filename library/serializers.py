@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Author, Book, Member, Loan
 from django.contrib.auth.models import User
+from datetime import date, timedelta
 
 class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
@@ -41,7 +42,12 @@ class LoanSerializer(serializers.ModelSerializer):
     member_id = serializers.PrimaryKeyRelatedField(
         queryset=Member.objects.all(), source='member', write_only=True
     )
-
+    
+    def create(self, validated_data):
+        loan = Loan(**validated_data)
+        loan.due_date = loan.loan_date+timedelta(days=14)
+        loan.save()
+        
     class Meta:
         model = Loan
         fields = ['id', 'book', 'book_id', 'member', 'member_id', 'loan_date', 'return_date', 'is_returned']

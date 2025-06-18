@@ -44,6 +44,7 @@ class BookViewSet(viewsets.ModelViewSet):
         book.available_copies += 1
         book.save()
         return Response({'status': 'Book returned successfully.'}, status=status.HTTP_200_OK)
+    
 
 class MemberViewSet(viewsets.ModelViewSet):
     queryset = Member.objects.all()
@@ -52,3 +53,11 @@ class MemberViewSet(viewsets.ModelViewSet):
 class LoanViewSet(viewsets.ModelViewSet):
     queryset = Loan.objects.all()
     serializer_class = LoanSerializer
+
+    @action(detail=True, url='<#pk>/extend_due_date', methods=['patch'])
+    def extend_due_date(self, request, pk=None):
+        loan = self.get_object()
+        loan.is_returned = True
+        loan.return_date = timezone.now().date()
+        loan.save()
+        return Response({'status': 'Book  due date extended successfully.'}, status=status.HTTP_200_OK)

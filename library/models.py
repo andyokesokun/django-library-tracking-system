@@ -39,7 +39,10 @@ class Loan(models.Model):
     book = models.ForeignKey(Book, related_name='loans', on_delete=models.CASCADE)
     member = models.ForeignKey(Member, related_name='loans', on_delete=models.CASCADE)
     loan_date = models.DateField(auto_now_add=True)
+    due_date = models.DateField(null=True, blank=True)
     return_date = models.DateField(null=True, blank=True)
+
+
     is_returned = models.BooleanField(default=False)
 
     def __str__(self):
