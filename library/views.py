@@ -5,6 +5,7 @@ from .models import Author, Book, Member, Loan
 from .serializers import AuthorSerializer, BookSerializer, MemberSerializer, LoanSerializer,serializers
 from rest_framework.decorators import action
 from django.utils import timezone
+from django.db.models import Prefetch
 from .tasks import send_loan_notification
 
 class AuthorViewSet(viewsets.ModelViewSet):
@@ -12,7 +13,12 @@ class AuthorViewSet(viewsets.ModelViewSet):
     serializer_class = AuthorSerializer
 
 class BookViewSet(viewsets.ModelViewSet):
-    queryset = Book.objects.all()
+    queryset = Book.objects.select_related('author').prefetch_related(
+        Prefetch(
+            'loans',
+            queryset=Loan.objects.select_related('member__user')
+        )
+    )
     serializer_class = BookSerializer
 
     @action(detail=True, methods=['post'])
