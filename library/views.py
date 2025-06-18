@@ -2,10 +2,11 @@ import datetime
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .models import Author, Book, Member, Loan
-from .serializers import AuthorSerializer, BookSerializer, MemberSerializer, LoanSerializer,serializers
+from .serializers import AuthorSerializer, BookSerializer, MemberSerializer, LoanSerializer, TopActiveMemberSerializer,serializers
 from rest_framework.decorators import action
 from django.utils import timezone
 from django.db.models import Prefetch
+from django.db.models import Count, Q
 from .tasks import send_loan_notification
 
 class AuthorViewSet(viewsets.ModelViewSet):
@@ -56,6 +57,17 @@ class BookViewSet(viewsets.ModelViewSet):
 class MemberViewSet(viewsets.ModelViewSet):
     queryset = Member.objects.all()
     serializer_class = MemberSerializer
+
+    @action(detail=False, methods=['get'], url_path='top-active')
+    def top_active(self, request):
+        members = (
+            Member.objects.annotate(active_loans=Count('loans', filter=Q(loans__is_returned=False)))
+            .filter(active_loans__gt=0)
+            .order_by('-active_loans')[:5]
+        )
+        serializer = TopActiveMemberSerializer(members, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
 
 class ExtendDueDateSerializer(serializers.Serializer):
     days = serializers.IntegerField(min_value=1)

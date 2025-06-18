@@ -23,6 +23,15 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email']
 
+class TopActiveMemberSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username')
+    email = serializers.EmailField(source='user.email')
+    active_loans = serializers.IntegerField()
+
+    class Meta:
+        model = Member
+        fields = ['id', 'username', 'email', 'active_loans']
+
 class MemberSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     user_id = serializers.PrimaryKeyRelatedField(
