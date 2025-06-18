@@ -1,3 +1,4 @@
+import datetime
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .models import Author, Book, Member, Loan
@@ -60,9 +61,13 @@ class LoanViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['patch'])
     def extend_due_date(self, request, pk=None):
         loan = self.get_object()
+
+        if loan.return_date < datetime.time():
+            Response({'status': 'Book loan date alraedy due'}, status=status.HTTP_400_BAD_REQUEST)
+
         serializer = ExtendDueDateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         days = serializer.validated_data["days"]
         loan.return_date +=timedelta(days)
         loan.save()
-        return Response({'status': 'Book due date extended successfully.'}, status=status.HTTP_200_OK)
+        return Response({'additional_days': days}, status=status.HTTP_200_OK)
